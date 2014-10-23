@@ -26,8 +26,25 @@
   notify: restart apache
   when: apache_create_vhosts
 
+- name: Check vhosts file
+  stat: path="{{ apache_conf_path }}/sites-available/vhosts.conf"
+  register: check_vhosts
+
 - name: Add vhost symlink in sites-enabled.
   file:
     src: "{{ apache_conf_path }}/sites-available/vhosts.conf"
     dest: "{{ apache_conf_path }}/sites-enabled/vhosts.conf"
     state: link
+  when: check_vhosts.stat.exists
+
+- name: Check default site vhosts file
+  stat: path="{{ apache_conf_path }}/sites-available/000-default.conf"
+  register: check_default_vhost
+  when: not check_vhosts.stat.exists
+
+- name: Add default site symlink in sites-enabled.
+  file:
+    src: "{{ apache_conf_path }}/sites-available/000-default.conf"
+    dest: "{{ apache_conf_path }}/sites-enabled/000-default.conf"
+    state: link
+  when: not check_vhosts.stat.exists and check_default_vhost.stat.exists
