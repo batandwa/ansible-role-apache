@@ -13,3 +13,7 @@ apache_vhosts:
   - {servername: "local.dev", documentroot: "/var/www/html"}
 
 apache_vhosts_version: "2.2"
+
+apache_user: 'www-data'
+
+apache_gropu: 'www-data'
