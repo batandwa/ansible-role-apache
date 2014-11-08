@@ -16,12 +16,39 @@
   with_items: apache_mods_enabled
   notify: restart apache
 
+- name: Create available configuration directory.
+  file: 
+    path: "{{ apache_server_root }}/conf-available"
+    state: directory
+
+- name: Create available configuration directory.
+  file: 
+    path: "{{ apache_server_root }}/conf.d"
+    state: directory
+  when: "apache_version.split('.')[1] == '2'"
+
+- name: Create enabled configuration directory.
+  file: 
+    path: "{{ apache_server_root }}/conf-enabled"
+    state: directory
+  when: "apache_version.split('.')[1] == '4'"
+
 - name: Add configuration.
   template: 
     src: "{{ item.src }}"
     dest: "{{ apache_server_root }}/conf-available/{{ item.dest }}"
   with_items: add_apache_conf
   when: add_apache_conf is defined
+  notify: restart apache
+
+- name: Enable Apache configurations.
+  file:
+    src: "{{ apache_server_root }}/conf-available/{{ item }}"
+    dest: "{{ apache_server_root }}/conf.d/{{ item }}"
+    state: link
+  with_items: apache_conf_enabled
+  notify: restart apache
+  when: apache_conf_enabled is defined and apache_version.split('.')[1] == '2'
 
 - name: Enable Apache configurations.
   file:
@@ -30,7 +57,7 @@
     state: link
   with_items: apache_conf_enabled
   notify: restart apache
-  when: apache_conf_enabled is defined
+  when: apache_conf_enabled is defined and apache_version.split('.')[1] == '4'
 
 - name: Add apache vhosts configuration.
   template:
